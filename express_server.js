@@ -2,16 +2,26 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
-//Setting ejs as the view engine:
-
-app.set('view engine', 'ejs');
-
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
-app.use(express.urlencoded({ extended: true }));
+function generateRandomString(idlength) {
+  let result = '';
+  let char = 'ABCDEFGHIJKLMNOPQRSTUVWXYSabcdefghijklmnopqrstuvwxyz123456789';
+  let length = char.length;
+  for (let i = 0; i < idlength; i++) {
+    result += char.charAt(Math.floor(Math.random() * length));
+  }
+  return result;
+}
+
+//Setting ejs as the view engine:
+app.set('view engine', 'ejs');
+
+
+app.use(express.urlencoded({ extended: true })); /////////// This is middleware to make the data post readable
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -35,7 +45,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: undefined }; ////////////////// implement here
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id]}; ////////////////// implement here
   res.render("urls_show", templateVars);
 });
 
