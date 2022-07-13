@@ -20,9 +20,21 @@
     <%- include('partials/_header') %>
     <main style="margin: 1em;">
       <h3>Registration Page</h3>
-      <form action="/register" method="POST">
+      <br>
+      <form action="/register" method="POST"> Register for an Account
+        <div>
+          <br>
         <input type="email" name="email" id=""> email
+      </div>
+      <br>
+        <div>
         <input type="password" name="password" id=""> password
+      </div>
+      <br>
+      <div>
+        <button type="submit" class="btn btn-info">Register</button>
+      </div>
+      <br>
       </form>
     </main>
     <!-- Bootstrap JS -->
