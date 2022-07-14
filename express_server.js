@@ -2,7 +2,7 @@
 
 const express = require("express");
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 8080;
 const cookieParser = require('cookie-parser');
 const morgan = require("morgan");
 
@@ -13,17 +13,18 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-// USER Object:
+// USER Object Database:
 const users = {
   userRandomID: {
     id: 'userRandomID',
     email: 'user@example.com',
     password: 'purple-monkey-dinasaur'
   }
+
 };
 // Function that generates the random string for the short URL
 
-function generateRandomString(idlength) {
+const generateRandomString = function(idlength) {
   let result = '';
   let char = 'ABCDEFGHIJKLMNOPQRSTUVWXYSabcdefghijklmnopqrstuvwxyz123456789';
   let length = char.length;
@@ -31,7 +32,18 @@ function generateRandomString(idlength) {
     result += char.charAt(Math.floor(Math.random() * length));
   }
   return result;
-}
+};
+
+// User email lookup function:
+
+const getUserByEmail = function(email, users) {
+  for (const user in users) {
+    if (email === users[user]['email']) {
+      return true;
+    }
+  }
+  return false;
+};
 
 // Setting ejs as the view engine:
 
@@ -39,7 +51,7 @@ app.set('view engine', 'ejs');
 
 // MIDDLEWARE SETUP:
 
-app.use(express.urlencoded({ extended: true })); 
+app.use(express.urlencoded({ extended: true }));
 
 app.use(cookieParser());
 
@@ -63,11 +75,10 @@ app.get("/hello", (req, res) => {
 app.get('/urls', (req,res) => {
   const userID = req.cookies['user_id'];
   const user = users[userID];
-  console.log(user);
-  const templateVars = 
+  const templateVars =
   {urls: urlDatabase,
-  user
-  }
+    user
+  };
   res.render('urls_index', templateVars);
 });
 
@@ -76,7 +87,7 @@ app.get('/urls', (req,res) => {
 app.get("/urls/new", (req, res) => {
   const userID = req.cookies['user_id'];
   const user = users[userID];
-  const templateVars = {user}
+  const templateVars = {user};
   res.render("urls_new", templateVars);
 });
 
@@ -88,15 +99,15 @@ app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   const longURL = urlDatabase[id];
   console.log(longURL);
-  const templateVars = { 
-    id, 
+  const templateVars = {
+    id,
     longURL,
     user
-   };
+  };
   res.render("urls_show", templateVars);
 });
 
-/// Creates a new submission 
+/// Creates a new submission
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   const shortURL = generateRandomString(6);
@@ -127,32 +138,61 @@ app.post("/urls/:id/delete", (req, res) => {
 
 /// POST TO LOG IN:
 app.post("/login", (req, res) => {
-  const userLoginName = req.body.username;
-  res.cookie('username', userLoginName);
-  res.redirect("/urls");
+  const email = req.body.email;
+  const password = req.body.password;
+  const userExists = getUserByEmail(email, users);
+  
+  if (!password || ! email) {
+    return res.status(403).send('Error 403: Please fill in the email and/or password sections provided.');
+  }
+  if (userExists === false) {
+    return res.status(403).send('Error 403: No account found with the provided email address.');
+  } 
+  for (const user in users) {
+    if (password !== users[user].password) {
+      return res.status(403).send('Error 403: Incorrect password.');
+    } else {
+      res.cookie('user_id', email);
+      return res.redirect('/urls'); 
+    }
+  }
+});
+
+
+app.get('/login', (req, res) => {
+  const user = req.cookies.email;
+  const templateVars = {user};
+  res.render('urls_login', templateVars);
 });
 
 /// POST TO LOG OUT:
- app.post('/logout', (req, res) => {
+app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
   res.redirect('urls');
- });
+});
 
- /// Render the register page:
+/// Render the register page:
 app.get('/register', (req, res) => {
-  const templateVars = { user: null }
+  const templateVars = { user: null };
   res.render('urls_register', templateVars);
 });
 
+/// Submit a registeration form:
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const id = generateRandomString(6);
-  users[id] = {id, email, password };
-  res.cookie('user_id', id);
-  console.log(users);
-  res.redirect('/urls');
+  if (email === "" || password === "") {
+    return res.status(400).send('Error 404: Your email or password is invalid.');
+  } else if (getUserByEmail(email, users) === true) {
+    return res.status(400).send('Error 404: Your email is already registered.');
+  } else if (getUserByEmail(email, users) === false) {
+    users[id] = {id, email, password };
+    res.cookie('user_id', id);
+    res.redirect('/urls');
+  }
 });
+
 
 // Server listening to PORT:
 app.listen(PORT, () => {

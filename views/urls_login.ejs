@@ -19,24 +19,24 @@
   <body>
     <%- include('partials/_header') %>
     <main style="margin: 1em;">
-      <h3>Registration Page</h3>
+      <h3>Login Page</h3>
       <br>
-      <form action="/register" method="POST"> Register for a TinyApp Account:
+      <form action="/login" method="POST"> Login to TinyApp:
         <div>
           <br>
-          <label for="registrationEmail"> Email address</label>
+          <label for="loginEmail"> Email address</label>
           <br>
-        <input type="email" name="email" id="" placeholder="Enter email address">
+        <input type="email" name="email" id="email" placeholder="Enter email address">
       </div>
       <br>
         <div>
-          <label for="emailPassword">Password</label>
+          <label for="loginPassword"> Password</label>
           <br>
-        <input type="password" name="password" id="" placeholder="Password"> 
+        <input type="password" name="password" id="password" placeholder="Password">
       </div>
       <br>
       <div>
-        <button type="submit" class="btn btn-info">Register</button>
+        <button type="submit" class="btn btn-info">Login</button>
       </div>
       <br>
       </form>
