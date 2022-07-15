@@ -30,14 +30,14 @@
           </tr>
         </thead>
         <tbody>
-          <% for (let id in urls) { %>
-            <tr><a href="urls/:id"></a>
-              <td><a href="urls/:id"></a><%= id %></td>
-              <td><%= urls[id] %></td>
-              <td><form method = "GET" action="/urls/<%= id %>"> 
+          <% for (let url in urls) { %>
+            <tr><a href="urls/:url"></a>
+              <td><a href="urls/:url"></a><%= url %></td>
+              <td><%= urls[url] %></td>
+              <td><form method = "GET" action="/urls/<%= url %>"> 
                 <button type="submit" class="btn btn-info">Edit</button>
               </form></td>
-              <td><form method = "POST" action="/urls/<%= id %>/delete"> 
+              <td><form method = "POST" action="/urls/<%= url %>/delete"> 
                 <button type="submit" class="btn btn-outline-danger">Delete</button>
               </form></td>
             </tr>

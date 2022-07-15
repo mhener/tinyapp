@@ -1,29 +1,56 @@
-// SERVER SETUP:
+/// SERVER SETUP:
 
-const express = require("express");
+const express = require('express');
 const app = express();
 const PORT = 8080;
 const cookieParser = require('cookie-parser');
-const morgan = require("morgan");
+const morgan = require('morgan');
+const bcrypt = require('bcryptjs');
+const cookieSession = require('cookie-session');
 
-// URL Database const {}
+/// Setting ejs as the view engine:
 
+app.set('view engine', 'ejs');
+
+/// MIDDLEWARE SETUP:
+
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(morgan());
+app.use(cookieSession({
+  name: 'session',
+  keys: [["$oksq/!134k,M", "Pequeno pollo de la pampa"]],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
+
+/// DATA OBJECTS:
+
+// URL Database:
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
-// USER Object Database:
+// User Object Database:
 const users = {
   userRandomID: {
     id: 'userRandomID',
     email: 'user@example.com',
-    password: 'purple-monkey-dinasaur'
+    password: bcrypt.hashSync('purple-monkey-dinasaur', 10)
   }
-
 };
-// Function that generates the random string for the short URL
 
+/// FUNCTIONS:
+
+// Function that generates the random string for the short URL
 const generateRandomString = function(idlength) {
   let result = '';
   let char = 'ABCDEFGHIJKLMNOPQRSTUVWXYSabcdefghijklmnopqrstuvwxyz123456789';
@@ -35,29 +62,34 @@ const generateRandomString = function(idlength) {
 };
 
 // User email lookup function:
-
 const getUserByEmail = function(email, users) {
   for (const user in users) {
-    if (email === users[user]['email']) {
-      return true;
+    if (email === users[user].email) {
+      return user;
     }
   }
-  return false;
 };
 
-// Setting ejs as the view engine:
+// User ID lookup function:
+const getUserByID = function(userID, users) {
+  const user = users[userID];
+  if (user) {
+    return user;
+  }
+};
 
-app.set('view engine', 'ejs');
+// URL for user function:
+const urlsForUser = (id, urlDatabase) => {
+  let userURLdata = {};
+  for (const url in urlDatabase) {
+    if (id === urlDatabase[url].userID) {
+      userURLdata[url] = urlDatabase[url];
+    }
+  }
+  return userURLdata;
+};
 
-// MIDDLEWARE SETUP:
-
-app.use(express.urlencoded({ extended: true }));
-
-app.use(cookieParser());
-
-app.use(morgan());
-
-// ROUTE SETUP:
+/// ROUTE SETUP:
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -71,130 +103,188 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-/// Renders the urls_index page:
-app.get('/urls', (req,res) => {
-  const userID = req.cookies['user_id'];
-  const user = users[userID];
-  const templateVars =
-  {urls: urlDatabase,
-    user
-  };
-  res.render('urls_index', templateVars);
-});
-
-
-/// Renders the urls_new page:
-app.get("/urls/new", (req, res) => {
-  const userID = req.cookies['user_id'];
-  const user = users[userID];
-  const templateVars = {user};
-  res.render("urls_new", templateVars);
-});
-
-/// Renders the urls_show page:
-
-app.get("/urls/:id", (req, res) => {
-  const userID = req.cookies['user_id'];
-  const user = users[userID];
-  const id = req.params.id;
-  const longURL = urlDatabase[id];
-  console.log(longURL);
-  const templateVars = {
-    id,
-    longURL,
-    user
-  };
-  res.render("urls_show", templateVars);
-});
-
-/// Creates a new submission
-app.post("/urls", (req, res) => {
-  const longURL = req.body.longURL;
-  const shortURL = generateRandomString(6);
-  urlDatabase[shortURL] = longURL;
-  res.redirect(`/urls/${shortURL}`);
-});
-
-/// Edit a submission:
-app.post("/urls/:id/", (req, res) => {
-  let shortURL = req.params.id;
-  let longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
-  res.redirect('/urls/');
-});
-
-/// Redirect to the actual long URL:
-app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
-});
-
-/// Delete a submission
-app.post("/urls/:id/delete", (req, res) => {
-  const shortURL = req.params.id;
-  delete urlDatabase[shortURL];
-  res.redirect('/urls');
-});
-
-/// POST TO LOG IN:
-app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  const userExists = getUserByEmail(email, users);
-  
-  if (!password || ! email) {
-    return res.status(403).send('Error 403: Please fill in the email and/or password sections provided.');
-  }
-  if (userExists === false) {
-    return res.status(403).send('Error 403: No account found with the provided email address.');
-  } 
-  for (const user in users) {
-    if (password !== users[user].password) {
-      return res.status(403).send('Error 403: Incorrect password.');
-    } else {
-      res.cookie('user_id', email);
-      return res.redirect('/urls'); 
-    }
-  }
-});
-
-
-app.get('/login', (req, res) => {
-  const user = req.cookies.email;
-  const templateVars = {user};
-  res.render('urls_login', templateVars);
-});
-
-/// POST TO LOG OUT:
-app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
-  res.redirect('urls');
-});
+/// REGISTER:
 
 /// Render the register page:
 app.get('/register', (req, res) => {
-  const templateVars = { user: null };
-  res.render('urls_register', templateVars);
+  if (req.session.user_id) {
+    return res.redirect('/urls');
+  } else {
+    const user = users[req.session.user_id];
+    const templateVars = {user};
+    res.render('urls_register', templateVars);
+  }
 });
 
 /// Submit a registeration form:
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const id = generateRandomString(6);
-  if (email === "" || password === "") {
+  const userID = generateRandomString(6);
+  const user = getUserByID(userID, users);
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
+  if (!email || !password) {
     return res.status(400).send('Error 404: Your email or password is invalid.');
-  } else if (getUserByEmail(email, users) === true) {
-    return res.status(400).send('Error 404: Your email is already registered.');
-  } else if (getUserByEmail(email, users) === false) {
-    users[id] = {id, email, password };
-    res.cookie('user_id', id);
-    res.redirect('/urls');
+  }
+  if (user) {
+    return res.status(400).send('Error 404: Your email is already registered to an existing account.');
+  } else {
+    users[userID] = {id: userID, email, password: hashedPassword};
+    req.session.user_id = userID.id;
+    return res.redirect('/urls');
   }
 });
 
+/// LOGIN PAGE:
 
-// Server listening to PORT:
+/// Render Login page:
+app.get('/login', (req, res) => {
+  if (req.session.user_id) {
+    return res.redirect('/urls');
+  } else {
+    const userID = req.session.user_id;
+    const user = getUserByID(userID, users);
+    const templateVars = {user};
+    res.render('urls_login', templateVars);
+  }
+});
+
+/// POST TO LOG IN:
+app.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const userID = getUserByEmail(email, users);
+  const user = getUserByID(userID, users);
+  
+  if (!password || ! email) {
+    return res.status(403).send('Error 403: Please fill in the email and/or password sections provided.');
+  } else if (!userID) {
+    return res.status(403).send('Error 403: No account found with the provided email address.');
+  } else if (!bcrypt.compareSync(password, user.password)) {
+    return res.status(403).send('Error 403: Incorrect password. Please try again.');
+  } else {
+    req.session.user_id = userID.id;
+    return res.redirect('/urls');
+  }
+});
+
+/// POST TO LOG OUT:
+app.post('/logout', (req, res) => {
+  req.session = null;
+  res.redirect('/login');
+});
+
+/// URL PAGES:
+
+/// Renders the urls_index page:
+app.get('/urls', (req,res) => {
+  const userID = req.session.user_id;
+  const user = getUserByID(userID, users);
+  const userURLs = urlsForUser(userID, urlDatabase);
+  
+  if (!req.session.user_id) {
+    return res.redirect('/login');
+  } else {
+    const templateVars = {urls: userURLs, user: users[userID]};
+    res.render('urls_index', templateVars);
+  }
+});
+
+/// Creates a new submission
+app.post("/urls", (req, res) => {
+  const userID = req.session.user_id;
+  const longURL = req.body.longURL;
+  const shortURL = generateRandomString(6);
+  const user = getUserByID(userID, users);
+  if (user) {
+    urlDatabase[shortURL] = {longURL, userID};
+    return res.redirect(`/urls/${shortURL}`);
+  } else {
+    return res.status(403).send('Error 403: Please login or register for an account to create a new short URL.');
+  }
+});
+
+/// Renders the urls_new page:
+app.get("/urls/new", (req, res) => {
+  const userID = req.session.user_id;
+  const user = getUserByID(userID, users);
+  const urls = urlDatabase;
+  if (!user) {
+    return res.redirect('/login');
+  } else {
+    const templateVars = {user: users[userID], urls};
+    res.render("urls_new", templateVars);
+  }
+});
+
+/// Renders the urls_show page:
+app.get("/urls/:shortURL", (req, res) => {
+  const userID = req.session.user_id;
+  const templateVars = {};
+  const userURLs = urlsForUser(userID, urlDatabase);
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL].longURL;
+  
+  if (!userID) {
+    templateVars.user = null;
+  } else {
+    if (userURLs[shortURL]) {
+      templateVars.user = users[userID];
+      templateVars.longURL = longURL;
+      templateVars.shortURL = shortURL;
+    } else {
+      templateVars.user = users[userID];
+      templateVars.shortURL = null;
+    } 
+  }
+  res.render("urls_show", templateVars);
+});
+
+/// Edit a submission:
+app.post("/urls/:shortURL/", (req, res) => {
+  const userID = req.session.user_id;
+  if (!userID) {
+    return res.status(403).send("Error 403: You do not have access to this page.");
+  } else {
+    const userURLs = urlsForUser(userID, urlDatabase);
+    if (userURLs[req.params.shortURL]) {
+      urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+      res.redirect("/urls");
+    } else {
+      return res.status(403).send("Error 403: You do not have access to this page");
+    }
+  }
+});
+
+/// Delete a submission
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const userID = req.session.user_id;
+  if (!userID) {
+    return res.status(403).send('Error 403: You do not have acccess to this page.');
+  } else {
+    const userURLs = urlsForUser(userID, urlDatabase);
+    const urlToDelete = req.params.shortURL;
+    if (userURLs[urlToDelete]) {
+      delete urlDatabase[urlToDelete];
+      return res.redirect('/urls');
+    } else {
+      return res.status(403).send('Error 403: You do not have access to this page.');
+    }
+  }
+});
+    
+/// Redirect to the actual long URL:
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  if (urlDatabase[shortURL]) {
+    return res.redirect(urlDatabase[shortURL].longURL);
+  } else {
+    return res.status(403).send('The link does not exist.');
+  }
+});
+
+/// Server listening to PORT:
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp listening on port ${PORT}!`);
 });

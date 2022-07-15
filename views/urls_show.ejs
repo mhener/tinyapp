@@ -16,16 +16,17 @@
     <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
-        <h5 class="card-title">TinyURL for: <%= longURL %></h5>
+        <h5 class="card-title">TinyURL for: <%= longURL%></h5>
         <p class="card-text">
-          Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
+          Short URL ID: <a href="/u/<%= shortURL %>"><%= shortURL %></a>
         </p>
       </div>
       <div class="card-footer text-muted">
         <h4>Edit</h4>
         <label for="input"> New URL:</label>
-        <form method='POST' action="/urls/<%= id %>/">
-          <input type="text" name="longURL" value=<%= longURL %>> <button class="btn btn-info">Submit</button>
+        <form method='POST' action="/urls/<%= shortURL %>/">
+          <input type="text" name="longURL" value=<%= longURL %>> 
+          <button class="btn btn-info">Submit</button>
         </form>
       </div>
     </div>
