@@ -21,9 +21,6 @@ app.use(morgan());
 app.use(cookieSession({
   name: 'session',
   keys: [["$oksq/!134k,M", "Pequeno pollo de la pampa"]],
-
-  // Cookie Options
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
 
 /// DATA OBJECTS:
@@ -85,7 +82,7 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const userID = generateRandomString(6);
-  const user = getUserByID(userID, users);
+  const user = getUserByEmail(email, users);
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (!email || !password) {
