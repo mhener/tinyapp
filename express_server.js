@@ -8,6 +8,7 @@ const morgan = require('morgan');
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
 
+
 /// Setting ejs as the view engine:
 
 app.set('view engine', 'ejs');
@@ -48,46 +49,12 @@ const users = {
   }
 };
 
-/// FUNCTIONS:
+// FUNCTIONS:
 
-// Function that generates the random string for the short URL
-const generateRandomString = function(idlength) {
-  let result = '';
-  let char = 'ABCDEFGHIJKLMNOPQRSTUVWXYSabcdefghijklmnopqrstuvwxyz123456789';
-  let length = char.length;
-  for (let i = 0; i < idlength; i++) {
-    result += char.charAt(Math.floor(Math.random() * length));
-  }
-  return result;
-};
-
-// User email lookup function:
-const getUserByEmail = function(email, users) {
-  for (const user in users) {
-    if (email === users[user].email) {
-      return user;
-    }
-  }
-};
-
-// User ID lookup function:
-const getUserByID = function(userID, users) {
-  const user = users[userID];
-  if (user) {
-    return user;
-  }
-};
-
-// URL for user function:
-const urlsForUser = (id, urlDatabase) => {
-  let userURLdata = {};
-  for (const url in urlDatabase) {
-    if (id === urlDatabase[url].userID) {
-      userURLdata[url] = urlDatabase[url];
-    }
-  }
-  return userURLdata;
-};
+const generateRandomString = require('./helpers');
+const getUserByEmail = require('./helpers');
+const getUserByID = require('./helpers');
+const urlsForUser = require('./helpers');
 
 /// ROUTE SETUP:
 
@@ -180,7 +147,6 @@ app.post('/logout', (req, res) => {
 /// Renders the urls_index page:
 app.get('/urls', (req,res) => {
   const userID = req.session.user_id;
-  const user = getUserByID(userID, users);
   const userURLs = urlsForUser(userID, urlDatabase);
   
   if (!req.session.user_id) {
@@ -208,9 +174,8 @@ app.post("/urls", (req, res) => {
 /// Renders the urls_new page:
 app.get("/urls/new", (req, res) => {
   const userID = req.session.user_id;
-  const user = getUserByID(userID, users);
   const urls = urlDatabase;
-  if (!user) {
+  if (!userID) {
     return res.redirect('/login');
   } else {
     const templateVars = {user: users[userID], urls};
