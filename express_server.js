@@ -51,10 +51,7 @@ const users = {
 
 // FUNCTIONS:
 
-const generateRandomString = require('./helpers');
-const getUserByEmail = require('./helpers');
-const getUserByID = require('./helpers');
-const urlsForUser = require('./helpers');
+const { generateRandomString, getUserByEmail, getUserByID, urlsForUser } = require('./helpers');
 
 /// ROUTE SETUP:
 
@@ -201,7 +198,7 @@ app.get("/urls/:shortURL", (req, res) => {
     } else {
       templateVars.user = users[userID];
       templateVars.shortURL = null;
-    } 
+    }
   }
   res.render("urls_show", templateVars);
 });

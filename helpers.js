@@ -41,4 +41,4 @@ const urlsForUser = (id, urlDatabase) => {
   return userURLdata;
 };
 
-module.exports = {generateRandomString, getUserByEmail, getUserByID, urlsForUser}
+module.exports = { generateRandomString, getUserByEmail, getUserByID, urlsForUser };
