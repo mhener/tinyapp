@@ -3,7 +3,6 @@
 const express = require('express');
 const app = express();
 const PORT = 8080;
-const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
@@ -16,35 +15,15 @@ app.set('view engine', 'ejs');
 /// MIDDLEWARE SETUP:
 
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.use(morgan());
 app.use(cookieSession({
   name: 'session',
   keys: [["$oksq/!134k,M", "Pequeno pollo de la pampa"]],
 }));
 
-/// DATA OBJECTS:
+// DATABASES:
 
-// URL Database:
-const urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userID: "aJ48lW",
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userID: "aJ48lW",
-  },
-};
-
-// User Object Database:
-const users = {
-  userRandomID: {
-    id: 'userRandomID',
-    email: 'user@example.com',
-    password: bcrypt.hashSync('purple-monkey-dinasaur', 10)
-  }
-};
+const {urlDatabase, users} = require('./databases');
 
 // FUNCTIONS:
 
@@ -245,5 +224,5 @@ app.get("/u/:shortURL", (req, res) => {
 
 /// Server listening to PORT:
 app.listen(PORT, () => {
-  console.log(`TinyApp listening on port ${PORT}!`);
+  console.log(`TinyApp is listening on port ${PORT}!`);
 });
