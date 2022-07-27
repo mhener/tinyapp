@@ -1,5 +1,4 @@
 /// SERVER SETUP:
-
 const express = require('express');
 const app = express();
 const PORT = 8080;
@@ -7,40 +6,34 @@ const morgan = require('morgan');
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
 
-
 /// Setting ejs as the view engine:
-
 app.set('view engine', 'ejs');
 
 /// MIDDLEWARE SETUP:
-
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan());
 app.use(cookieSession({
   name: 'session',
-  keys: [["$oksq/!134k,M", "Pequeno pollo de la pampa"]],
+  keys: ['key1', 'key2'],
 }));
 
 // DATABASES:
-
 const {urlDatabase, users} = require('./databases');
 
 // FUNCTIONS:
-
 const { generateRandomString, getUserByEmail, getUserByID, urlsForUser } = require('./helpers');
 
 /// ROUTE SETUP:
-
 app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  const userID = req.session.user_id;
+  const userURLs = urlsForUser(userID, urlDatabase);
+  
+  if (!userID) {
+    return res.redirect('/login');
+  } else {
+    const templateVars = {urls: userURLs, user: users[userID]};
+    res.render('urls_index', templateVars);
+  }
 });
 
 /// REGISTER:
@@ -69,11 +62,10 @@ app.post('/register', (req, res) => {
   }
   if (user) {
     return res.status(400).send('Error 404: Your email is already registered to an existing account.');
-  } else {
-    users[userID] = {id: userID, email, password: hashedPassword};
-    req.session.user_id = userID.id;
-    return res.redirect('/urls');
   }
+    users[userID] = {id: userID, email, password: hashedPassword};
+    req.session.user_id = userID;
+    return res.redirect('/urls');
 });
 
 /// LOGIN PAGE:
@@ -84,8 +76,8 @@ app.get('/login', (req, res) => {
     return res.redirect('/urls');
   } else {
     const userID = req.session.user_id;
-    const user = getUserByID(userID, users);
-    const templateVars = {user};
+    // const user = getUserByID(userID, users);
+    const templateVars = {user: users[userID]};
     res.render('urls_login', templateVars);
   }
 });
@@ -97,14 +89,14 @@ app.post("/login", (req, res) => {
   const userID = getUserByEmail(email, users);
   const user = getUserByID(userID, users);
   
-  if (!password || ! email) {
+  if (!password || !email) {
     return res.status(403).send('Error 403: Please fill in the email and/or password sections provided.');
   } else if (!userID) {
     return res.status(403).send('Error 403: No account found with the provided email address.');
   } else if (!bcrypt.compareSync(password, user.password)) {
     return res.status(403).send('Error 403: Incorrect password. Please try again.');
   } else {
-    req.session.user_id = userID.id;
+    req.session.user_id = userID;
     return res.redirect('/urls');
   }
 });
@@ -222,7 +214,7 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
-/// Server listening to PORT:
+/// Server is listening to PORT:
 app.listen(PORT, () => {
   console.log(`TinyApp is listening on port ${PORT}!`);
 });
