@@ -1,3 +1,5 @@
+const bcrypt = require('bcryptjs');
+
 /// DATA OBJECTS:
 
 // URL Database:
@@ -21,4 +23,4 @@ const users = {
   }
 };
 
-module.exports = { urlDatabase, users};
+module.exports = {urlDatabase, users};
