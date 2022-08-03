@@ -115,7 +115,7 @@ app.get('/urls', (req,res) => {
   const userURLs = urlsForUser(userID, urlDatabase);
   
   if (!req.session.user_id) {
-    return res.redirect('/login');
+    return res.send("Please Log in to see shortened URLS");
   } else {
     const templateVars = {urls: userURLs, user: users[userID]};
     res.render('urls_index', templateVars);
