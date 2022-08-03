@@ -158,6 +158,8 @@ app.get("/urls/:shortURL", (req, res) => {
   
   if (!userID) {
     templateVars.user = null;
+    return res.send("Please Log in to see shortened URLS");
+    
   } else {
     if (userURLs[shortURL]) {
       templateVars.user = users[userID];
@@ -166,6 +168,7 @@ app.get("/urls/:shortURL", (req, res) => {
     } else {
       templateVars.user = users[userID];
       templateVars.shortURL = null;
+      return res.send('The link does not exist!');
     }
   }
   res.render("urls_show", templateVars);
