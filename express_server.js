@@ -63,9 +63,9 @@ app.post('/register', (req, res) => {
   if (user) {
     return res.status(400).send('Error 404: Your email is already registered to an existing account.');
   }
-    users[userID] = {id: userID, email, password: hashedPassword};
-    req.session.user_id = userID;
-    return res.redirect('/urls');
+  users[userID] = {id: userID, email, password: hashedPassword};
+  req.session.user_id = userID;
+  return res.redirect('/urls');
 });
 
 /// LOGIN PAGE:
